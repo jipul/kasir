@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manajemen Warung (Kasir + Kasbon + Pengeluaran)</title>
+  <style>
+    :root {
+      --brand-main:#7b2cbf;
+      --brand-main-hover:#5a189a;
+      --brand-accent:#9d4edd;
+      --danger:#e63946;
+      --danger-hover:#c72f3c;
+      --radius-sm:4px;
+      --radius-md:8px;
+      --radius-lg:16px;
+      --shadow-sm:0 1px 3px rgba(0,0,0,.15);
+      --shadow-md:0 2px 8px rgba(0,0,0,.18);
+      --shadow-lg:0 8px 24px rgba(0,0,0,.18);
+      --bg-page:#f5f5f5;
+      --bg-panel:#ffffff;
+      --bg-panel-alt:#fafafa;
+      --text-main:#1b1b1b;
+      --text-muted:#666;
+      --table-head-bg:var(--brand-main);
+      --table-head-text:#fff;
+      --table-row-alt:#f7efff;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+    body{background:var(--bg-page);color:var(--text-main);line-height:1.35;margin:0;}
+    header{background:var(--brand-main);color:#fff;padding:16px 24px;text-align:center;font-size:1.5rem;font-weight:600;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);}  
+    /* MENU */
+    .menu{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;background:var(--brand-accent);padding:10px 16px;position:sticky;top:64px;z-index:90;box-shadow:var(--shadow-sm);}  
+    .menu button{background:#fff;color:var(--brand-main);border:none;border-radius:var(--radius-md);padding:8px 18px;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all .15s ease;white-space:nowrap;box-shadow:var(--shadow-sm);}  
+    .menu button:hover,.menu button.active{background:var(--brand-main);color:#fff;}  
+    .content-wrapper{width:100%;max-width:1100px;margin:0 auto;padding:24px 16px;}  
+    .panel{display:none;margin-bottom:48px;background:var(--bg-panel);padding:24px;border-radius:var(--radius-lg);box-shadow:var(--shadow-md);}  
+    .panel.active{display:block;}  
+    .panel-header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;}  
+    .panel-header h2{font-size:1.25rem;font-weight:700;color:var(--text-main);}  
+    .panel-metric{font-weight:700;font-size:1.05rem;color:var(--brand-main);}  
+    .panel-actions{display:flex;gap:8px;align-items:center;}  
+    .btn{border:none;border-radius:var(--radius-md);padding:8px 16px;font-weight:700;cursor:pointer;transition:.15s;font-size:0.95rem;}  
+    .btn-primary{background:var(--brand-main);color:#fff;}  
+    .btn-primary:hover{background:var(--brand-main-hover);}  
+    .btn-danger{background:var(--danger);color:#fff;}  
+    .btn-danger:hover{background:var(--danger-hover);}  
+    /* card list */
+    .card-list{display:flex;flex-direction:column;gap:12px;width:100%;}
+    .product-card{display:grid;grid-template-columns:1fr 72px 150px 72px 72px;align-items:center;gap:12px;background:#fff;padding:12px 16px;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);}  
+    .product-card .name{font-size:1.05rem;font-weight:600;}  
+    .product-card .point{text-align:center;font-weight:700;}  
+    .product-card .value{text-align:right;font-weight:600;}  
+    .product-card button{background:var(--brand-main);color:#fff;border:none;border-radius:var(--radius-sm);padding:6px 0;font-size:0.9rem;font-weight:600;cursor:pointer;transition:.15s;}  
+    .product-card button:hover{background:var(--brand-main-hover);}  
+    /* form modern */
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:16px;margin-bottom:16px;align-items:end;}  
+    .form-field label{font-size:0.85rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;}  
+    .form-field input,.form-field select{width:100%;padding:8px 10px;font-size:1rem;border:1px solid #ccc;border-radius:var(--radius-md);}  
+    /* table modern */
+    .table-wrapper{width:100%;max-height:50vh;overflow:auto;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);}  
+    table.data-table{width:100%;border-collapse:collapse;font-size:0.95rem;background:#fff;}  
+    table.data-table thead{position:sticky;top:0;z-index:1;background:var(--table-head-bg);color:var(--table-head-text);}  
+    table.data-table th,table.data-table td{padding:10px 12px;border-bottom:1px solid #e0e0e0;text-align:left;}  
+    table.data-table th.num,table.data-table td.num{text-align:right;}  
+    table.data-table tbody tr:nth-child(even){background:var(--table-row-alt);}  
+    table.data-table td.actions{text-align:center;}  
+    table.data-table button.del-btn{background:var(--danger);color:#fff;border:none;border-radius:var(--radius-sm);padding:4px 10px;font-size:0.85rem;cursor:pointer;transition:.15s;}  
+    table.data-table button.del-btn:hover{background:var(--danger-hover);}  
+    /* calc panel */
+    .calc-container{display:flex;flex-direction:column;align-items:flex-start;gap:16px;max-width:300px;}  
+    .calc-container input{width:100%;padding:8px 10px;font-size:1rem;border:1px solid #ccc;border-radius:var(--radius-md);}  
+    #change-result{font-size:1.2rem;font-weight:700;color:var(--brand-main);}  
+    /* responsive */
+    @media(max-width:600px){
+      .product-card{grid-template-columns:1fr 60px 110px 60px 60px;font-size:0.9rem;}
+      .panel{padding:16px;}
+    }
+  </style>
+</head>
+<body>
+  <header>Manajemen Warung</header>
+  <div class="menu">
+    <button id="menu1-btn">Karyawan</button>
+    <button id="menu2-btn">Minuman</button>
+    <button id="menu3-btn">Kasbon</button>
+    <button id="menu5-btn">Pengeluaran</button>
+    <button id="menu4-btn">Kalkulator</button>
+  </div>
+
+  <div class="content-wrapper">
+    <!-- Karyawan Panel -->
+    <section class="panel" id="stock-content">
+      <div class="panel-header">
+        <h2>Karyawan</h2>
+        <div class="panel-actions">
+          <div class="panel-metric" id="total-value">Total Uang Masuk: Rp 0</div>
+          <button id="reset-karyawan" class="btn btn-danger" title="Reset semua point karyawan">Reset</button>
+        </div>
+      </div>
+      <div id="product-list" class="card-list"></div>
+    </section>
+
+    <!-- Minuman Panel -->
+    <section class="panel" id="drink-content">
+      <div class="panel-header">
+        <h2>Minuman</h2>
+        <div class="panel-actions">
+          <div class="panel-metric" id="total-drinks">Total Minuman: Rp 0</div>
+          <button id="reset-minuman" class="btn btn-danger" title="Reset semua stok minuman">Reset</button>
+        </div>
+      </div>
+      <div id="drink-list" class="card-list"></div>
+    </section>
+
+    <!-- Kasbon Panel -->
+    <section class="panel" id="kasbon-content">
+      <div class="panel-header">
+        <h2>Kasbon</h2>
+        <div class="panel-actions">
+          <div class="panel-metric" id="total-kasbon">Total Kasbon: Rp 0</div>
+          <button id="reset-kasbon" class="btn btn-danger" title="Hapus semua kasbon">Reset</button>
+        </div>
+      </div>
+      <form id="kasbon-form" onsubmit="return false;">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="kasbon-karyawan">Karyawan</label>
+            <select id="kasbon-karyawan"></select>
+          </div>
+          <div class="form-field">
+            <label for="kasbon-item">Kasbon Apa?</label>
+            <select id="kasbon-item"></select>
+          </div>
+          <div class="form-field">
+            <label id="kasbon-amount-label" for="kasbon-amount">Jumlah (Rp / Qty)</label>
+            <input type="number" id="kasbon-amount" min="0" step="1" placeholder="0" />
+          </div>
+          <div class="form-field" style="display:flex;gap:8px;align-items:center;">
+            <button id="kasbon-add-btn" type="button" class="btn btn-primary" style="flex:1;">+ Tambah Kasbon</button>
+            <button id="kasbon-reset-btn" type="button" class="btn btn-danger" style="flex:1;">Reset Kasbon</button>
+          </div>
+        </div>
+      </form>
+      <div class="table-wrapper">
+        <table class="data-table" id="kasbon-table">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Karyawan</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th class="num">Nilai (Rp)</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="kasbon-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pengeluaran Panel -->
+    <section class="panel" id="pengeluaran-content">
+      <div class="panel-header">
+        <h2>Pengeluaran Toko</h2>
+        <div class="panel-actions">
+          <div class="panel-metric" id="total-pengeluaran">Total Pengeluaran: Rp 0</div>
+          <button id="reset-pengeluaran" class="btn btn-danger" title="Hapus semua pengeluaran">Reset</button>
+        </div>
+      </div>
+      <form id="pengeluaran-form" onsubmit="return false;">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="pengeluaran-desc">Deskripsi</label>
+            <input type="text" id="pengeluaran-desc" placeholder="Contoh: Beli Stok" />
+          </div>
+          <div class="form-field">
+            <label for="pengeluaran-amount">Nominal (Rp)</label>
+            <input type="number" id="pengeluaran-amount" min="0" step="1000" placeholder="0" />
+          </div>
+          <div class="form-field" style="display:flex;gap:8px;align-items:center;">
+            <button id="pengeluaran-add-btn" type="button" class="btn btn-primary" style="flex:1;">+ Tambah</button>
+            <button id="pengeluaran-reset-btn" type="button" class="btn btn-danger" style="flex:1;">Reset</button>
+          </div>
+        </div>
+      </form>
+      <div class="table-wrapper">
+        <table class="data-table" id="pengeluaran-table">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Deskripsi</th>
+              <th class="num">Nilai (Rp)</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="pengeluaran-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Kalkulator Panel -->
+    <section class="panel" id="calculator-content">
+      <div class="panel-header">
+        <h2>Kalkulator Kembalian</h2>
+        <div class="panel-actions">
+          <button id="reset-calc" class="btn btn-danger" title="Kosongkan input">Reset</button>
+        </div>
+      </div>
+      <div class="calc-container">
+        <input type="number" id="amount-received" placeholder="Jumlah Uang Diterima (Rp)" />
+        <input type="number" id="total-price" placeholder="Total Harga (Rp)" />
+        <button class="btn btn-primary" id="calculate-btn">Hitung</button>
+        <div id="change-result"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    /* ===================== DATA ===================== */
+    const karyawanList = ["GENZ","GUGUN","UCUP","IPUL"];
+    const karyawanData    = JSON.parse(localStorage.getItem("karyawanData"))    || {};
+    const drinkData       = JSON.parse(localStorage.getItem("drinkData"))       || {};
+    const kasbonData      = JSON.parse(localStorage.getItem("kasbonData"))      || [];
+    const pengeluaranData = JSON.parse(localStorage.getItem("pengeluaranData")) || [];
+
+    const drinkList = [
+      {name:"Le Mineral",price:4000},
+      {name:"Teh Pucuk", price:5000},
+      {name:"Kopi",      price:5000},
+      {name:"Susu",      price:9000}
+    ];
+
+    /* ===================== UTIL ===================== */
+    const saveLocal = () => {
+      localStorage.setItem("karyawanData",JSON.stringify(karyawanData));
+      localStorage.setItem("drinkData",JSON.stringify(drinkData));
+      localStorage.setItem("kasbonData",JSON.stringify(kasbonData));
+      localStorage.setItem("pengeluaranData",JSON.stringify(pengeluaranData));
+    };
+    const formatRupiah = num => `Rp ${Number(num||0).toLocaleString('id-ID')}`;
+    const getDrinkPrice = name => { const d = drinkList.find(x=>x.name===name); return d?d.price:0; };
+
+    /* ===================== KARYAWAN ===================== */
+    const calcKaryawanValue = (name,points)=>{
+      const n=name.toLowerCase();
+      if(n==="gugun"){return points<=15?points*9000:(15*9000)+((points-15)*13000);} 
+      if(n==="genz"){return points*20000;}
+      return points<=15?points*8000:(15*8000)+((points-15)*13000);
+    };
+    const renderKaryawanList=()=>{
+      const cont=document.getElementById("product-list");
+      cont.innerHTML="";let total=0;
+      karyawanList.forEach(n=>{
+        if(!Object.prototype.hasOwnProperty.call(karyawanData,n))karyawanData[n]=0;
+        const card=document.createElement("div");card.className="product-card";
+        const nameSpan=document.createElement("span");nameSpan.className="name";nameSpan.textContent=n;
+        const pts=document.createElement("span");pts.className="point";pts.textContent=karyawanData[n];
+        const val=document.createElement("span");val.className="value";const v=calcKaryawanValue(n,karyawanData[n]);val.textContent=formatRupiah(v);total+=v;
+        const plus=document.createElement("button");plus.textContent="+";plus.title="Tambah point";plus.onclick=()=>{karyawanData[n]++;saveLocal();renderKaryawanList();};
+        const min=document.createElement("button");min.textContent="-";min.title="Kurangi point";min.onclick=()=>{if(karyawanData[n]>0){karyawanData[n]--;saveLocal();renderKaryawanList();}};
+        card.append(nameSpan,pts,val,plus,min);cont.appendChild(card);
+      });
+      document.getElementById("total-value").textContent=`Total Uang Masuk: ${formatRupiah(total)}`;
+    };
+
+    /* ===================== MINUMAN ===================== */
+    const renderDrinkList=()=>{
+      const cont=document.getElementById("drink-list");
+      cont.innerHTML="";let total=0;
+      drinkList.forEach(d=>{
+        if(!Object.prototype.hasOwnProperty.call(drinkData,d.name))drinkData[d.name]=0;
+        const card=document.createElement("div");card.className="product-card";
+        const nameSpan=document.createElement("span");nameSpan.className="name";nameSpan.textContent=d.name;
+        const qty=document.createElement("span");qty.className="point";qty.textContent=drinkData[d.name];
+        const val=document.createElement("span");val.className="value";const v=drinkData[d.name]*d.price;val.textContent=formatRupiah(v);total+=v;
+        const plus=document.createElement("button");plus.textContent="+";plus.title="Tambah 1";plus.onclick=()=>{drinkData[d.name]++;saveLocal();renderDrinkList();};
+        const min=document.createElement("button");min.textContent="-";min.title="Kurangi 1";min.onclick=()=>{if(drinkData[d.name]>0){drinkData[d.name]--;saveLocal();renderDrinkList();}};
+        card.append(nameSpan,qty,val,plus,min);cont.appendChild(card);
+      });
+      document.getElementById("total-drinks").textContent=`Total Minuman: ${formatRupiah(total)}`;
+    };
+
+    /* ===================== KASBON ===================== */
+    const kasbonKaryawanSelect=document.getElementById("kasbon-karyawan");
+    const kasbonItemSelect=document.getElementById("kasbon-item");
+    const kasbonAmountInput=document.getElementById("kasbon-amount");
+    const kasbonAmountLabel=document.getElementById("kasbon-amount-label");
+    const buildKasbonKaryawanOptions=()=>{kasbonKaryawanSelect.innerHTML="";karyawanList.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;kasbonKaryawanSelect.appendChild(o);});};
+    const buildKasbonItemOptions=()=>{kasbonItemSelect.innerHTML="";const oU=document.createElement("option");oU.value="uang";oU.textContent="Uang (Rp)";kasbonItemSelect.appendChild(oU);drinkList.forEach(dr=>{const o=document.createElement("option");o.value="drink:"+dr.name;o.textContent=`${dr.name} (${formatRupiah(dr.price)})`;kasbonItemSelect.appendChild(o);});};
+    const updateKasbonAmountLabel=()=>{if(kasbonItemSelect.value==="uang"){kasbonAmountLabel.textContent="Jumlah Uang (Rp)";kasbonAmountInput.placeholder="0 (Rp)";kasbonAmountInput.step="1000";}else{kasbonAmountLabel.textContent="Jumlah (Qty)";kasbonAmountInput.placeholder="0 (pcs)";kasbonAmountInput.step="1";}};
+    kasbonItemSelect.addEventListener("change",updateKasbonAmountLabel);
+    document.getElementById("kasbon-add-btn").onclick=()=>{
+      const kry=kasbonKaryawanSelect.value;const itm=kasbonItemSelect.value;const amt=Number(kasbonAmountInput.value);
+      if(!kry){alert("Pilih karyawan!");return;}if(itm===""||isNaN(amt)||amt<=0){alert("Jumlah salah!");return;}
+      const entry={id:Date.now(),dateISO:new Date().toISOString(),karyawan:kry,type:"",itemName:"",qty:null,amountRp:0};
+      if(itm==="uang"){entry.type="uang";entry.itemName="Uang";entry.amountRp=amt;}else if(itm.startsWith("drink:")){const dn=itm.split(":")[1];entry.type="drink";entry.itemName=dn;entry.qty=amt;entry.amountRp=amt*getDrinkPrice(dn);} 
+      kasbonData.push(entry);saveLocal();renderKasbonTable();kasbonAmountInput.value="";};
+    document.getElementById("kasbon-reset-btn").onclick=()=>{if(confirm("Reset SEMUA data kasbon?")){kasbonData.length=0;saveLocal();renderKasbonTable();}};
+    const renderKasbonTable=()=>{
+      const tb=document.getElementById("kasbon-tbody");tb.innerHTML="";let tot=0;[...kasbonData].sort((a,b)=>b.id-a.id).forEach(e=>{tot+=Number(e.amountRp||0);const tr=document.createElement("tr");const d=new Date(e.dateISO);const tg=d.toLocaleDateString('id-ID',{year:'numeric',month:'2-digit',day:'2-digit'});const jm=d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});tr.innerHTML=`<td>${tg} ${jm}</td><td>${e.karyawan}</td><td>${e.itemName}</td><td>${e.type==='uang'?'-':e.qty}</td><td class="num">${formatRupiah(e.amountRp)}</td><td class="actions"><button class="del-btn">Hapus</button></td>`;tr.querySelector('.del-btn').onclick=()=>{const i=kasbonData.findIndex(x=>x.id===e.id);if(i!==-1){kasbonData.splice(i,1);saveLocal();renderKasbonTable();}};tb.appendChild(tr);});
+      document.getElementById("total-kasbon").textContent=`Total Kasbon: ${formatRupiah(tot)}`;};
+
+    /* ===================== PENGELUARAN ===================== */
+    const pengeluaranDescInput=document.getElementById("pengeluaran-desc");
+    const pengeluaranAmountInput=document.getElementById("pengeluaran-amount");
+    document.getElementById("pengeluaran-add-btn").onclick=()=>{const d=pengeluaranDescInput.value.trim();const a=Number(pengeluaranAmountInput.value);if(!d){alert("Isi deskripsi!");return;}if(isNaN(a)||a<=0){alert("Nominal salah!");return;}pengeluaranData.push({id:Date.now(),dateISO:new Date().toISOString(),desc:d,amountRp:a});saveLocal();renderPengeluaranTable();pengeluaranDescInput.value="";pengeluaranAmountInput.value="";};
+    document.getElementById("pengeluaran-reset-btn").onclick=()=>{if(confirm("Reset SEMUA pengeluaran?")){pengeluaranData.length=0;saveLocal();renderPengeluaranTable();}};
+    document.getElementById("reset-pengeluaran").onclick=()=>{if(confirm("Reset SEMUA pengeluaran?")){pengeluaranData.length=0;saveLocal();renderPengeluaranTable();}};/*header btn*/
+    const renderPengeluaranTable=()=>{const tb=document.getElementById("pengeluaran-tbody");tb.innerHTML="";let tot=0;[...pengeluaranData].sort((a,b)=>b.id-a.id).forEach(e=>{tot+=Number(e.amountRp||0);const tr=document.createElement("tr");const d=new Date(e.dateISO);const tg=d.toLocaleDateString('id-ID',{year:'numeric',month:'2-digit',day:'2-digit'});const jm=d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});tr.innerHTML=`<td>${tg} ${jm}</td><td>${e.desc}</td><td class="num">${formatRupiah(e.amountRp)}</td><td class="actions"><button class="del-btn">Hapus</button></td>`;tr.querySelector('.del-btn').onclick=()=>{const i=pengeluaranData.findIndex(x=>x.id===e.id);if(i!==-1){pengeluaranData.splice(i,1);saveLocal();renderPengeluaranTable();}};tb.appendChild(tr);});document.getElementById("total-pengeluaran").textContent=`Total Pengeluaran: ${formatRupiah(tot)}`;};
+
+    /* ===================== KALKULATOR ===================== */
+    const calcAmount=document.getElementById("amount-received");
+    const calcTotal=document.getElementById("total-price");
+    const calcResult=document.getElementById("change-result");
+    document.getElementById("calculate-btn").onclick=()=>{const a=parseFloat(calcAmount.value);const t=parseFloat(calcTotal.value);if(isNaN(a)||isNaN(t)){calcResult.textContent="Isi nominal bener dulu.";return;}const ch=a-t;calcResult.textContent=ch>=0?`Kembalian: ${formatRupiah(ch)}`:"Uang Kurang!";};
+    document.getElementById("reset-calc").onclick=()=>{calcAmount.value="";calcTotal.value="";calcResult.textContent="";};
+
+    /* ===================== HEADER RESET SHORTCUTS ===================== */
+    document.getElementById("reset-karyawan").onclick=()=>{if(confirm("Reset semua point karyawan?")){karyawanList.forEach(n=>karyawanData[n]=0);saveLocal();renderKaryawanList();}};
+    document.getElementById("reset-minuman").onclick=()=>{if(confirm("Reset semua minuman?")){drinkList.forEach(d=>drinkData[d.name]=0);saveLocal();renderDrinkList();}};
+    document.getElementById("reset-kasbon").onclick=()=>{if(confirm("Reset semua kasbon?")){kasbonData.length=0;saveLocal();renderKasbonTable();}};
+
+    /* ===================== MENU SWITCH ===================== */
+    const showTab=tab=>{
+      ["stock-content","drink-content","kasbon-content","pengeluaran-content","calculator-content"].forEach(id=>document.getElementById(id).classList.remove("active"));
+      if(tab==="karyawan")document.getElementById("stock-content").classList.add("active");
+      if(tab==="minuman")document.getElementById("drink-content").classList.add("active");
+      if(tab==="kasbon")document.getElementById("kasbon-content").classList.add("active");
+      if(tab==="pengeluaran")document.getElementById("pengeluaran-content").classList.add("active");
+      if(tab==="calc")document.getElementById("calculator-content").classList.add("active");
+      document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active'));
+      if(tab==="karyawan")document.getElementById("menu1-btn").classList.add('active');
+      if(tab==="minuman")document.getElementById("menu2-btn").classList.add('active');
+      if(tab==="kasbon")document.getElementById("menu3-btn").classList.add('active');
+      if(tab==="pengeluaran")document.getElementById("menu5-btn").classList.add('active');
+      if(tab==="calc")document.getElementById("menu4-btn").classList.add('active');
+    };
+    document.getElementById("menu1-btn").onclick=()=>showTab("karyawan");
+    document.getElementById("menu2-btn").onclick=()=>showTab("minuman");
+    document.getElementById("menu3-btn").onclick=()=>showTab("kasbon");
+    document.getElementById("menu5-btn").onclick=()=>showTab("pengeluaran");
+    document.getElementById("menu4-btn").onclick=()=>showTab("calc");
+
+    /* ===================== INIT ===================== */
+    buildKasbonKaryawanOptions();
+    buildKasbonItemOptions();
+    updateKasbonAmountLabel();
+    renderKaryawanList();
+    renderDrinkList();
+    renderKasbonTable();
+    renderPengeluaranTable();
+    showTab("karyawan");
+  </script>
+</body>
+</html>
