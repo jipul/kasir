@@ -197,7 +197,18 @@
         const name=document.createElement("span");name.className="name";name.textContent=n;
         const pts=document.createElement("span");pts.className="point";pts.textContent=karyawanData[n];
         const val=document.createElement("span");const v=calcKaryawanValue(n,karyawanData[n]);val.className="value";val.textContent=formatRupiah(v);total+=v;
-        const plus=document.createElement("button");plus.textContent="+";plus.onclick=()=>{karyawanData[n]++;saveLocal();renderKaryawanList();};
+        const plus = document.createElement("button");
+plus.textContent = "+";
+plus.onclick = () => {
+  const before = calcKaryawanValue(n, karyawanData[n]); // nilai sebelum nambah
+  karyawanData[n]++;                                    // tambah point
+  const after  = calcKaryawanValue(n, karyawanData[n]); // nilai setelah nambah
+  const delta  = after - before;                        // selisih = uang masuk point baru
+  if (delta > 0) recordDaily(delta);                    // catat ke laporan harian
+  saveLocal();
+  renderKaryawanList();
+};
+
         const min=document.createElement("button");min.textContent="-";min.onclick=()=>{if(karyawanData[n]>0){karyawanData[n]--;saveLocal();renderKaryawanList();}};
         card.append(name,pts,val,plus,min);
         cont.appendChild(card);
